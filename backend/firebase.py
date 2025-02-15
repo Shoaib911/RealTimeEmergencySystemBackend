@@ -4,7 +4,7 @@ import os
 import json
 
 # Load Firebase credentials from environment variable
-firebase_config_str = os.getenv("FIREBASE_CREDENTIAL")
+firebase_config_str = os.getenv("FIREBASE_CREDENTIALS")
 
 if not firebase_config_str:
     raise ValueError("FIREBASE_CREDENTIALS environment variable is not set.")
