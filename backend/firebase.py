@@ -9,10 +9,10 @@ import json
 # if not firebase_config_str:
     # raise ValueError("FIREBASE_CREDENTIALS environment variable is not set.")
 
-try:
-    firebase_config = json.loads(firebase_config_str)
-except json.JSONDecodeError as e:
-    raise ValueError("Invalid FIREBASE_CREDENTIALS format. Make sure it's a valid JSON string.") from e
+# try:
+    # firebase_config = json.loads(firebase_config_str)
+# except json.JSONDecodeError as e:
+    # raise ValueError("Invalid FIREBASE_CREDENTIALS format. Make sure it's a valid JSON string.") from e
 
 def fetch_user_data(user_id):
     ref = db.reference(f"users/{user_id}")
