@@ -50,6 +50,8 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers.
 )
 
+os.system("pip install basicsr==1.4.1")
+
 # Define request model
 class UserNotificationRequest(BaseModel):
     fcm_token: str
