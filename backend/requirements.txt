@@ -83,7 +83,7 @@ msgpack==1.1.0
 multidict==6.1.0
 narwhals==1.19.1
 networkx==3.4.2
-numba==0.60.0
+numba==0.59.1
 numpy==1.26.4
 opencv-python==4.10.0.84
 orjson==3.10.3
