@@ -50,3 +50,5 @@ colorama==0.4.6
 # CORS & Middleware
 asgiref==3.8.1
 multidict==6.1.0
+torch==2.0.1
+
