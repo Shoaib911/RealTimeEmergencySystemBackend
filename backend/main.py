@@ -59,6 +59,8 @@ def index():
     return {"name": "First Data"}
 
 
+
+
 # Define request model
 class UserNotificationRequest(BaseModel):
     fcm_token: str
@@ -67,6 +69,7 @@ class UserNotificationRequest(BaseModel):
 
 @app.post("/send-notification-agent/")
 async def send_notification(request: UserNotificationRequest):
+    get_firebase_app();
     try:
         # Create Firebase message
         message = messaging.Message(
@@ -94,6 +97,7 @@ class AgentNotificationRequest(BaseModel):
 
 @app.post("/send-notification-user/")
 async def send_notification(request: AgentNotificationRequest):
+    get_firebase_app();
     try:
         # Create Firebase message
         message = messaging.Message(
@@ -121,6 +125,7 @@ class SmsRequest(BaseModel):
 
 @app.post("/send-sms/")
 async def send_sms(sms_request: SmsRequest):
+    get_firebase_app();
     account_sid = 'ACcdd281fe40033888943ad6f8578f2e7e'
     auth_token = 'dc5a56bee3094b372a905fc14e930df2'
     from_number = 'MG940b04b409365380c15c10efc3a519a3'  # Your Twilio Messaging Service SID or number
@@ -152,16 +157,20 @@ class UserSignin(BaseModel):
     password: str
 
 
-class SignInRequest(BaseModel):
-    email: str
-    password: str
+
 
 class FCMTokenRequest(BaseModel):
     email: str
     fcmToken: str
 
+
+class SignInRequest(BaseModel):
+    email: str
+    password: str
+
 @app.post("/api/signin")
 async def sign_in(request: SignInRequest):
+    get_firebase_app();
     try:
         user = auth.get_user_by_email(request.email)
         token = auth.create_custom_token(user.uid)
@@ -173,6 +182,7 @@ async def sign_in(request: SignInRequest):
 
 @app.post("/api/store-fcm-token")
 async def store_fcm_token(request: FCMTokenRequest):
+    get_firebase_app();
     try:
         user = auth.get_user_by_email(request.email)
         user_id = user.uid
@@ -201,6 +211,7 @@ class IncidentReport(BaseModel):
 # Report an incident
 @app.post("/report-incident")
 async def report_incident(incident: IncidentReport):
+    get_firebase_app();
     try:
         ref = db.reference("incidents")
         incident_id = str(uuid.uuid4())
@@ -226,6 +237,7 @@ async def report_incident(incident: IncidentReport):
 # Get nearby unresolved incidents for a specific user
 @app.get("/incidents/nearby")
 async def get_nearby_incidents(user_id: str, latitude: float, longitude: float):
+    get_firebase_app();
     try:
         # Get reference to the incidents path in Firebase
         ref = db.reference("incidents")
@@ -256,6 +268,7 @@ async def get_nearby_incidents(user_id: str, latitude: float, longitude: float):
 # Resolve (or cancel) an incident
 @app.put("/incidents/{incident_id}/resolve")
 async def resolve_incident(incident_id: str):
+    get_firebase_app();
     try:
         ref = db.reference(f"incidents/{incident_id}")
         incident_data = ref.get()
@@ -323,16 +336,31 @@ async def resolve_incident(incident_id: str):
 #     except Exception as e:
 #         print(f"🔥 Error fetching incidents: {str(e)}")
 #         raise HTTPException(status_code=500, detail=f"Error retrieving incidents: {str(e)}")
+# @app.get("/incidents/")
+# async def get_all_incidents():
+#     try:
+#         ref = db.reference("incidents")
+#         all_incidents = ref.get()
+#         if not all_incidents:
+#             return {"message": "No incidents found", "incidents": {}}
+#         return {"message": "Incidents retrieved successfully", "incidents": all_incidents}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error retrieving incidents: {str(e)}")
+
+
 @app.get("/incidents/")
 async def get_all_incidents():
     try:
+        get_firebase_app();
         ref = db.reference("incidents")
         all_incidents = ref.get()
         if not all_incidents:
             return {"message": "No incidents found", "incidents": {}}
         return {"message": "Incidents retrieved successfully", "incidents": all_incidents}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error retrieving incidents: {str(e)}")
+        error_trace = traceback.format_exc()
+        logging.error(f"Error retrieving incidents: {e}\n{error_trace}")
+        raise HTTPException(status_code=500, detail="Error retrieving incidents. Check server logs for details.")
 
 class AssignAgentRequest(BaseModel):
     incident_id: str
@@ -340,6 +368,7 @@ class AssignAgentRequest(BaseModel):
 
 @app.post("/assign-agent")
 async def update_assigned_agent(request: AssignAgentRequest):
+    get_firebase_app();
     try:
         # Reference to the specific incident in Firebase
         incident_ref = db.reference(f"incidents/{request.incident_id}")
@@ -364,6 +393,7 @@ class UpdateStatusRequest(BaseModel):
 
 @app.post("/update-status")
 async def update_status(request: UpdateStatusRequest):
+    get_firebase_app();
     try:
         # Reference to the specific incident in Firebase
         incident_ref = db.reference(f"incidents/{request.incident_id}")
@@ -396,6 +426,7 @@ class UserSignup(BaseModel):
 
 @app.post("/signup")
 def register_user(user: UserSignup):
+    get_firebase_app();
     try:
         get_firebase_app();
         print(f"📨 Received user signup request: {user}")
@@ -442,6 +473,7 @@ def register_user(user: UserSignup):
 
 @app.get("/agents")
 def get_all_agents():
+    get_firebase_app();
     try:
         print(f"🔍 Fetching all users from Firebase")
 
@@ -469,6 +501,7 @@ def get_all_agents():
 
 @app.get("/type_users")
 def get_all_users():
+    get_firebase_app();
     try:
         print(f"🔍 Fetching all users from Firebase")
 
@@ -500,6 +533,7 @@ class UpdateUserStatusRequest(BaseModel):
 
 @app.post("/update-user-status")
 async def update_status(request: UpdateUserStatusRequest):
+    get_firebase_app();
     try:
         # Reference to the specific user in Firebase
         user_ref = db.reference(f"users/{request.user_id}")
@@ -526,6 +560,7 @@ class UpdateAgentStatusRequest(BaseModel):
 
 @app.post("/update-agent-status")
 async def update_status(request: UpdateAgentStatusRequest):
+    get_firebase_app();
     try:
         # Reference to the specific user in Firebase using the user_id
         user_ref = db.reference(f"users/{request.agent_id}")  # Adjust the path if needed for agents
@@ -547,6 +582,7 @@ async def update_status(request: UpdateAgentStatusRequest):
 # ✅ API to Get All Users from Firebase
 @app.get("/users")
 def get_all_users():
+    get_firebase_app();
     try:
         print(f"🔍 Fetching all users from Firebase")
 
@@ -569,6 +605,7 @@ def get_all_users():
 
 @app.get("/users/{user_id}")
 def get_user(user_id: str):
+    get_firebase_app();
     try:
         print(f"🔍 Received request to fetch user data for UID: [{user_id}]")  # Added brackets for debugging
 
@@ -592,47 +629,49 @@ def get_user(user_id: str):
         raise HTTPException(status_code=500, detail=f"Error retrieving user: {str(e)}")
 
 
-# Sign in user
-@app.post("/signin")
-def login_user(user: UserSignin):
-    try:
-        user_ref = db.reference("users")
-        users = user_ref.get()
+# # Sign in user
+# @app.post("/signin")
+# def login_user(user: UserSignin):
+#     try:
+#         user_ref = db.reference("users")
+#         users = user_ref.get()
         
-        for uid, details in users.items():
-            if details['email'] == user.email:
-                return {"message": "Login successful", "user_type": details["type"]}
+#         for uid, details in users.items():
+#             if details['email'] == user.email:
+#                 return {"message": "Login successful", "user_type": details["type"]}
         
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+#         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/geocode/")
-async def geocode_location(location: Location):
-    return {"address": get_geocoded_address(location.latitude, location.longitude)}
+# @app.post("/geocode/")
+# async def geocode_location(location: Location):
+#     return {"address": get_geocoded_address(location.latitude, location.longitude)}
 
-@app.post("/directions/")
-async def get_directions_to_user(agent_location: Location, user_location: Location):
-    try:
-        directions = get_directions(agent_location, user_location)
-        return directions
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# @app.post("/directions/")
+# async def get_directions_to_user(agent_location: Location, user_location: Location):
+#     try:
+#         directions = get_directions(agent_location, user_location)
+#         return directions
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/distance/")
-async def calculate_distance(agent_location: Location, user_location: Location):
-    try:
-        distance_matrix = get_distance_matrix(agent_location, user_location)
-        return distance_matrix["rows"][0]["elements"][0]
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# @app.post("/distance/")
+# async def calculate_distance(agent_location: Location, user_location: Location):
+#     try:
+#         distance_matrix = get_distance_matrix(agent_location, user_location)
+#         return distance_matrix["rows"][0]["elements"][0]
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/alert/")
 async def send_emergency_alert(alert: EmergencyAlert):
     try:
+        get_firebase_app();
         contacts = fetch_user_data(alert.user_id)["emergency_contacts"]
         send_alert_to_contacts(alert, contacts)
         return {"message": "Alerts sent successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
