@@ -54,7 +54,7 @@ os.system("pip install basicsr==1.4.1")
 
 @app.get("/") 
 def index(): 
-return {"name": "First Data"}
+    return {"name": "First Data"}
 
 
 # Define request model
