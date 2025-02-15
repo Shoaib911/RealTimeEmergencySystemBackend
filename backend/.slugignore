@@ -1,5 +1,6 @@
 # Ignore virtual environment
 venv/
+.git/
 __pycache__/
 *.pyc
 *.pyo
@@ -19,5 +20,10 @@ __pycache__/
 *.dmg
 *.iso
 node_modules/
+venv/
+tests/
+docs/
+*.log
 tmp/
 .cache/
+
