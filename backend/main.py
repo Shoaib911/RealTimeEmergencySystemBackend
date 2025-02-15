@@ -20,24 +20,26 @@ import json
 # Check if Firebase is already initialized
 def get_firebase_app():
     if not firebase_admin._apps:  # Check if Firebase is already initialized
-        # Load credentials from Heroku environment variable
         firebase_credentials = os.getenv("FIREBASE_CREDENTIALS")
 
         if not firebase_credentials:
             raise ValueError("FIREBASE_CREDENTIALS environment variable is not set.")
 
-        cred_dict = json.loads(firebase_credentials)
-        cred = credentials.Certificate(cred_dict)
+        try:
+            # Ensure it's properly formatted JSON
+            cred_dict = json.loads(firebase_credentials)  
+            cred = credentials.Certificate(cred_dict)
 
-        firebase_admin.initialize_app(cred, {
-            'databaseURL': "https://elisasentry-default-rtdb.asia-southeast1.firebasedatabase.app"
-        })
-        print("✅ Firebase Initialized Successfully")
+            firebase_admin.initialize_app(cred, {
+                'databaseURL': "https://elisasentry-default-rtdb.asia-southeast1.firebasedatabase.app"
+            })
+            print("✅ Firebase Initialized Successfully")
+        except json.JSONDecodeError as e:
+            raise ValueError("❌ Invalid FIREBASE_CREDENTIALS format. Ensure it's a valid JSON string.") from e
     else:
         print("✅ Firebase Already Initialized")
 
     return firebase_admin.get_app()
-    
 
 app = FastAPI()
 
