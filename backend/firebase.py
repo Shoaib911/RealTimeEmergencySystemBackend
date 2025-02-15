@@ -3,13 +3,16 @@ from firebase_admin import credentials, db, messaging
 import os
 import json
 
-firebase_config = json.loads(os.getenv("FIREBASE_CREDENTIALS"))
+# Load Firebase credentials from environment variable
+firebase_config_str = os.getenv("FIREBASE_CREDENTIAL")
 
-# Initialize Firebase app
-cred = credentials.Certificate(firebase_config)
-firebase_admin.initialize_app(cred, {
-    'databaseURL': "https://elisasentry-default-rtdb.asia-southeast1.firebasedatabase.app"
-})
+if not firebase_config_str:
+    raise ValueError("FIREBASE_CREDENTIALS environment variable is not set.")
+
+try:
+    firebase_config = json.loads(firebase_config_str)
+except json.JSONDecodeError as e:
+    raise ValueError("Invalid FIREBASE_CREDENTIALS format. Make sure it's a valid JSON string.") from e
 
 def fetch_user_data(user_id):
     ref = db.reference(f"users/{user_id}")
