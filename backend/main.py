@@ -417,10 +417,18 @@ async def update_status(request: UpdateStatusRequest):
 # Pydantic models
 class UserSignup(BaseModel):
     name: str
+    lastName: str
+    street: str
+    city: str
+    country: str
+    countryCode: str
+    phoneNumber: str
+    zone: str
+    utilityBill: str
+    referralName: str
     email: str
-    phone: str
-    location: Location  # Change this to Location instead of dict
     password: str
+    location: Location
     types: str
     status: str
 
@@ -441,16 +449,24 @@ def register_user(user: UserSignup):
         # Step 2: Convert location properly
         location_data = user.location.model_dump()  # Pydantic v2 fix
         print(f"📍 Location data: {location_data}")
+        phone = user.countryCode + user.phoneNumber
 
         # Step 3: Prepare user data
         user_data = {
             "id": user_record.uid,
             "name": user.name,
+            "lastName": user.lastName,
+            "street": user.street,
+            "city": user.city,
+            "country": user.country,
+            "zone": user.zone,
+            "utilityBill": user.utilityBill,
+            "referralName": user.referralName,
             "email": user.email,
-            "phone": user.phone,
+            "phone": phone,
             "location": location_data,
             "status": user.status,
-            "type": user.types
+            "type": user.types,
         }
         print(f"📤 User data to be saved: {user_data}")
 
