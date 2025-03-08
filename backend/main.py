@@ -449,7 +449,7 @@ def register_user(user: UserSignup):
         # Step 2: Convert location properly
         location_data = user.location.model_dump()  # Pydantic v2 fix
         print(f"📍 Location data: {location_data}")
-        phone = user.countryCode + user.phoneNumber
+        phone = "+" + user.countryCode + user.phoneNumber
 
         # Step 3: Prepare user data
         user_data = {
