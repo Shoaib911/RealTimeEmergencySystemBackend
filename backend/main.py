@@ -18,27 +18,16 @@ import json
 
 
 # Check if Firebase is already initialized
+# Check if Firebase is already initialized
 def get_firebase_app():
     if not firebase_admin._apps:  # Check if Firebase is already initialized
-        firebase_credentials = os.getenv("FIREBASE_CREDENTIALS")
-
-        if not firebase_credentials:
-            raise ValueError("FIREBASE_CREDENTIALS environment variable is not set.")
-
-        try:
-            # Ensure it's properly formatted JSON
-            cred_dict = json.loads(firebase_credentials)  
-            cred = credentials.Certificate(cred_dict)
-
-            firebase_admin.initialize_app(cred, {
-                'databaseURL': "https://elisasentry-default-rtdb.asia-southeast1.firebasedatabase.app"
-            })
-            print("✅ Firebase Initialized Successfully")
-        except json.JSONDecodeError as e:
-            raise ValueError("❌ Invalid FIREBASE_CREDENTIALS format. Ensure it's a valid JSON string.") from e
+        cred = credentials.Certificate("C:\\Users\\shoai\\OneDrive\\Desktop\\RealTimeEmergencySystemBackend\\backend\\elisasentry-firebase-adminsdk.json")
+        firebase_admin.initialize_app(cred, {
+            'databaseURL': "https://elisasentry-default-rtdb.asia-southeast1.firebasedatabase.app"
+        })
+        print("hhrrrrrrrrr")
     else:
-        print("✅ Firebase Already Initialized")
-
+        print(f"gghghhg {str(firebase_admin._apps)}")
     return firebase_admin.get_app()
 
 app = FastAPI()
@@ -52,13 +41,10 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers.
 )
 
-os.system("pip install basicsr==1.4.1")
 
 @app.get("/") 
 def index(): 
     return {"name": "First Data"}
-
-
 
 
 # Define request model
@@ -156,13 +142,9 @@ class UserSignin(BaseModel):
     email: str
     password: str
 
-
-
-
 class FCMTokenRequest(BaseModel):
     email: str
     fcmToken: str
-
 
 class SignInRequest(BaseModel):
     email: str
@@ -351,16 +333,25 @@ async def resolve_incident(incident_id: str):
 @app.get("/incidents/")
 async def get_all_incidents():
     try:
-        get_firebase_app();
+        get_firebase_app()
+        print("✅ Firebase Initialized")
+
         ref = db.reference("incidents")
+        print(f"📡 Firebase reference path: {ref.path}")
+
         all_incidents = ref.get()
+        print(f"📥 Raw Incident Data: {all_incidents}")
+
         if not all_incidents:
             return {"message": "No incidents found", "incidents": {}}
+
         return {"message": "Incidents retrieved successfully", "incidents": all_incidents}
+    
     except Exception as e:
-        error_trace = traceback.format_exc()
-        logging.error(f"Error retrieving incidents: {e}\n{error_trace}")
-        raise HTTPException(status_code=500, detail="Error retrieving incidents. Check server logs for details.")
+        print(f"🔥 EXCEPTION: {e}")
+        print(traceback.format_exc())  # Add this to view full error in console
+        raise HTTPException(status_code=500, detail="Error retrieving incidents. See logs.")
+
 
 class AssignAgentRequest(BaseModel):
     incident_id: str
