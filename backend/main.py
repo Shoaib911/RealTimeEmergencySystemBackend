@@ -15,19 +15,26 @@ from geopy.distance import geodesic
 from twilio.rest import Client
 import os
 import json
-
+import base64
+import firebase_admin
+from firebase_admin import credentials
 
 # Check if Firebase is already initialized
 # Check if Firebase is already initialized
 def get_firebase_app():
-    if not firebase_admin._apps:  # Check if Firebase is already initialized
-        cred = credentials.Certificate("C:\\Users\\shoai\\OneDrive\\Desktop\\RealTimeEmergencySystemBackend\\backend\\elisasentry-firebase-adminsdk.json")
+    if not firebase_admin._apps:
+        encoded = os.getenv("FIREBASE_CREDENTIALS")
+        if not encoded:
+            raise Exception("FIREBASE_CREDENTIALS env variable is not set.")
+
+        # Decode and load the credential dictionary
+        decoded = base64.b64decode(encoded).decode("utf-8")
+        cred_dict = json.loads(decoded)
+
+        cred = credentials.Certificate(cred_dict)
         firebase_admin.initialize_app(cred, {
             'databaseURL': "https://elisasentry-default-rtdb.asia-southeast1.firebasedatabase.app"
         })
-        print("hhrrrrrrrrr")
-    else:
-        print(f"gghghhg {str(firebase_admin._apps)}")
     return firebase_admin.get_app()
 
 app = FastAPI()
@@ -266,70 +273,6 @@ async def resolve_incident(incident_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error resolving incident: {e}")
 
-# class IncidentReport(BaseModel):
-#     type: str
-#     location: Location
-#     time: str
-#     priority: str
-#     assigned_agent: str = "N/A"
-#     status: str = "Unresolved"
-
-# @app.post("/report-incident")
-# async def report_incident(incident: IncidentReport):
-#     try:
-#         # Create unique incident ID
-#         incident_id = str(uuid.uuid4())
-        
-#         # Get the incident data
-#         incident_data = {
-#             "id": incident_id,
-#             "type": incident.type,
-#             "location": incident.location.dict(),
-#             "time": incident.time,
-#             "priority": incident.priority,
-#             "assigned_agent": incident.assigned_agent,
-#             "status": incident.status
-#         }
-
-#         # Store the incident in Firebase Realtime Database
-#         db.reference(f"incidents/{incident_id}").set(incident_data)
-
-#         return {"message": "Incident reported successfully", "incident": incident_data}
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-# @app.get("/incidents/")
-# async def get_all_incidents():
-#     try:
-#         print(f"🔍 Fetching all incidents...")
-
-#         ref = db.reference("incidents")
-#         all_incidents = ref.get()
-
-#         if not all_incidents:
-#             print("⚠️ No incidents found in Firebase.")
-#             return {"message": "No incidents found", "incidents": {}}
-
-#         print(f"✅ Total Incidents Retrieved: {len(all_incidents)}")
-#         print("📡 Firebase Data:", all_incidents)  # ✅ Debugging Line
-
-#         return {"message": "Incidents retrieved successfully", "incidents": all_incidents}
-
-#     except Exception as e:
-#         print(f"🔥 Error fetching incidents: {str(e)}")
-#         raise HTTPException(status_code=500, detail=f"Error retrieving incidents: {str(e)}")
-# @app.get("/incidents/")
-# async def get_all_incidents():
-#     try:
-#         ref = db.reference("incidents")
-#         all_incidents = ref.get()
-#         if not all_incidents:
-#             return {"message": "No incidents found", "incidents": {}}
-#         return {"message": "Incidents retrieved successfully", "incidents": all_incidents}
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error retrieving incidents: {str(e)}")
-
-
 @app.get("/incidents/")
 async def get_all_incidents():
     try:
@@ -402,8 +345,6 @@ async def update_status(request: UpdateStatusRequest):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating status: {str(e)}")
-
-
 
 # Pydantic models
 class UserSignup(BaseModel):
@@ -634,43 +575,6 @@ def get_user(user_id: str):
     except Exception as e:
         print(f"🔥 Firebase read error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error retrieving user: {str(e)}")
-
-
-# # Sign in user
-# @app.post("/signin")
-# def login_user(user: UserSignin):
-#     try:
-#         user_ref = db.reference("users")
-#         users = user_ref.get()
-        
-#         for uid, details in users.items():
-#             if details['email'] == user.email:
-#                 return {"message": "Login successful", "user_type": details["type"]}
-        
-#         raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-# @app.post("/geocode/")
-# async def geocode_location(location: Location):
-#     return {"address": get_geocoded_address(location.latitude, location.longitude)}
-
-# @app.post("/directions/")
-# async def get_directions_to_user(agent_location: Location, user_location: Location):
-#     try:
-#         directions = get_directions(agent_location, user_location)
-#         return directions
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-# @app.post("/distance/")
-# async def calculate_distance(agent_location: Location, user_location: Location):
-#     try:
-#         distance_matrix = get_distance_matrix(agent_location, user_location)
-#         return distance_matrix["rows"][0]["elements"][0]
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/alert/")
 async def send_emergency_alert(alert: EmergencyAlert):
